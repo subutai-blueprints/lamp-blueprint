@@ -1,0 +1,75 @@
+# Ansible Playbook for Subutai Nextcloud blueprint
+---
+
+- hosts: all
+  gather_facts: false
+  remote_user: root
+  tasks: 
+
+    - name: Update
+      raw: apt-get -y update || true
+
+    - name: Upgrade
+      raw: apt-get -y dist-upgrade
+
+- hosts: lamp
+  remote_user: root
+  tasks: 
+
+    - name: Install required debs
+      apt: 
+        name: "{{ item }}"
+        state: present
+      with_items: 
+        - php7.0-fpm
+        - php7.0-mbstring
+        - php7.0-mcrypt
+        - php7.0-mysql
+        - php7.0-zip
+        - php7.0-xml
+        - php7.0-gd
+        - php7.0-curl
+        - apache2
+        - mariadb-server
+        - mariadb-client
+
+    - name: Enable mod_rewrite
+      apache2_module:
+        name: rewrite
+        state: present
+
+    - name: Enable proxy_fcgi
+      apache2_module:
+        name: proxy_fcgi
+        state: present
+
+    - name: Enable setenvif
+      apache2_module:
+        name: setenvif
+        state: present
+
+    - name: Disable mpm_prefork
+      apache2_module:
+        name: mpm_prefork
+        state: absent
+        ignore_configcheck: True
+
+    - name: Enable mpm_event
+      apache2_module:
+        name: mpm_event
+        state: present
+        ignore_configcheck: True
+
+    - name: Use php7.0-fpm
+      file:
+        state: link
+        src: /etc/apache2/conf-available/php7.0-fpm.conf
+        dst: /etc/apache2/conf-enabled/php7.0-fpm.conf
+        force: yes
+
+    - name: Restart apache
+      service: 
+        name: apache2
+        state: restarted
+        
+# vim: ts=2 et nowrap autoindent
