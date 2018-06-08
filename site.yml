@@ -67,6 +67,14 @@
         dest: /etc/apache2/conf-enabled/php7.0-fpm.conf
         force: yes
 
+    - name: Copy example content
+      copy:
+        src: html/
+        dest: /var/www/html/
+        owner: www-data
+        group: www-data
+        mode: 0644
+
     - name: Restart apache
       service: 
         name: apache2
